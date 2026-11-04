@@ -5,7 +5,7 @@ one 60-second composition for each supported genre. Each is the first frontend
 trial for its genre from the recorded evaluation, retained without editing.
 
 | Sample | Genre | 
-|---|---|---:|---:|
+|---|---|
 | [classical_60s.mid](classical_60s.mid) | Classical | 
 | [romantic_60s.mid](romantic_60s.mid) | Romantic | 
 | [rock_pop_60s.mid](rock_pop_60s.mid) | Rock & Pop | 
