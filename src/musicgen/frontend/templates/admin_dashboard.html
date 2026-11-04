@@ -1,0 +1,31 @@
+{% extends "admin_base.html" %}
+{% block content %}
+<section class="page-heading">
+  <p class="eyebrow">YOUR WORKSPACE TOOLS</p>
+  <h1>Your studio,<br><em>behind the scenes.</em></h1>
+  <p class="intro">One sign in for your monitoring dashboards and service overview.</p>
+</section>
+{% if local_mode %}
+<p class="notice">You are using local mode. Prometheus and Grafana are available through the full Docker Compose stack.</p>
+{% endif %}
+<div class="tool-grid">
+  <a class="tool-card" href="/admin/prometheus/">
+    <span class="tool-number">01 / METRICS</span>
+    <h2>Prometheus</h2>
+    <p>Explore service metrics, generation timings, and scrape targets.</p>
+    <span class="card-action">Open Prometheus <span aria-hidden="true">↗</span></span>
+  </a>
+  <a class="tool-card" href="/admin/grafana/">
+    <span class="tool-number">02 / DASHBOARDS</span>
+    <h2>Grafana</h2>
+    <p>Follow HTTP traffic, queue activity, and MIDI generation performance.</p>
+    <span class="card-action">Open Grafana <span aria-hidden="true">↗</span></span>
+  </a>
+  <a class="tool-card" href="{{ url_for('admin.redis_status') }}">
+    <span class="tool-number">03 / JOB STORE</span>
+    <h2>Redis</h2>
+    <p>Check connectivity, memory use, and queued or generating jobs.</p>
+    <span class="card-action">View Redis status <span aria-hidden="true">→</span></span>
+  </a>
+</div>
+{% endblock %}

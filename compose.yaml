@@ -1,0 +1,211 @@
+name: cadence
+
+x-app-environment: &app-environment
+  MUSICGEN_RUN_MODE: distributed
+  MUSICGEN_BROKER_URL: redis://cadence:${MUSICGEN_REDIS_PASSWORD:?Set MUSICGEN_REDIS_PASSWORD in .env}@redis:6379/0
+  MUSICGEN_RESULT_BACKEND: redis://cadence:${MUSICGEN_REDIS_PASSWORD:?Set MUSICGEN_REDIS_PASSWORD in .env}@redis:6379/1
+  MUSICGEN_JOB_STORE_URL: redis://cadence:${MUSICGEN_REDIS_PASSWORD:?Set MUSICGEN_REDIS_PASSWORD in .env}@redis:6379/2
+  MUSICGEN_OUTPUT_DIR: /outputs
+  MUSICGEN_CHECKPOINT_PATH: /models/best.pt
+  MUSICGEN_MAX_DURATION_SECONDS: ${MUSICGEN_MAX_DURATION_SECONDS:-240}
+  MUSICGEN_DEFAULT_DURATION_SECONDS: ${MUSICGEN_DEFAULT_DURATION_SECONDS:-45}
+  MUSICGEN_GENERATION_TIMEOUT_SECONDS: ${MUSICGEN_GENERATION_TIMEOUT_SECONDS:-1800}
+  MUSICGEN_MAX_PENDING_JOBS: ${MUSICGEN_MAX_PENDING_JOBS:-32}
+  MUSICGEN_JOB_RETENTION_SECONDS: ${MUSICGEN_JOB_RETENTION_SECONDS:-604800}
+  MUSICGEN_TORCH_THREADS: ${MUSICGEN_TORCH_THREADS:-2}
+  MUSICGEN_MAX_TOKENS: ${MUSICGEN_MAX_TOKENS:-30000}
+  MUSICGEN_LOG_LEVEL: ${MUSICGEN_LOG_LEVEL:-INFO}
+  MUSICGEN_PALETTE: ${MUSICGEN_PALETTE:-original}
+  MUSICGEN_ENDING_STYLE: ${MUSICGEN_ENDING_STYLE:-release}
+  MUSICGEN_REPETITION_PENALTY: ${MUSICGEN_REPETITION_PENALTY:-0.3}
+
+services:
+  traefik:
+    image: traefik:v3.7.17
+    restart: unless-stopped
+    command: ["--configFile=/etc/traefik/traefik.yaml"]
+    ports:
+      - "127.0.0.1:${MUSICGEN_HTTP_PORT:-8080}:80"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./infra/traefik/traefik.yaml:/etc/traefik/traefik.yaml:ro
+      - ./infra/traefik/dynamic:/etc/traefik/dynamic:ro
+    networks:
+      app: {}
+      monitoring: {}
+      admin_tools:
+        ipv4_address: ${MUSICGEN_ADMIN_PROXY_IP:-172.30.250.2}
+    depends_on:
+      frontend: {condition: service_healthy}
+      api: {condition: service_healthy}
+
+  frontend:
+    build: {context: ., dockerfile: docker/frontend.Dockerfile}
+    restart: unless-stopped
+    environment:
+      MUSICGEN_RUN_MODE: distributed
+      MUSICGEN_API_BASE_URL: ""
+      MUSICGEN_DEFAULT_DURATION_SECONDS: ${MUSICGEN_DEFAULT_DURATION_SECONDS:-45}
+      MUSICGEN_MAX_DURATION_SECONDS: ${MUSICGEN_MAX_DURATION_SECONDS:-240}
+      MUSICGEN_ADMIN_DB_PATH: /admin-data/admin.sqlite3
+      MUSICGEN_ADMIN_COOKIE_SECURE: ${MUSICGEN_ADMIN_COOKIE_SECURE:-false}
+      MUSICGEN_ADMIN_SESSION_SECONDS: ${MUSICGEN_ADMIN_SESSION_SECONDS:-28800}
+      MUSICGEN_JOB_STORE_URL: redis://cadence:${MUSICGEN_REDIS_PASSWORD:?Set MUSICGEN_REDIS_PASSWORD in .env}@redis:6379/2
+    expose: ["5000"]
+    volumes:
+      - admin_data:/admin-data
+    networks: [app, monitoring]
+    labels:
+      traefik.enable: "true"
+      traefik.docker.network: cadence_app
+      traefik.http.routers.frontend.rule: 'PathPrefix("/") && !PathPrefix("/metrics") && !PathPrefix("/health")'
+      traefik.http.routers.frontend.priority: "1"
+      traefik.http.routers.frontend.entrypoints: web
+      traefik.http.routers.frontend.middlewares: default-headers@file
+      traefik.http.services.frontend.loadbalancer.server.port: "5000"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:5000/health/live', timeout=2)"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+
+  api:
+    build: {context: ., dockerfile: docker/api.Dockerfile}
+    restart: unless-stopped
+    environment: *app-environment
+    expose: ["8000"]
+    volumes:
+      - midi_outputs:/outputs:ro
+    networks: [app, monitoring]
+    depends_on:
+      redis: {condition: service_healthy}
+    labels:
+      traefik.enable: "true"
+      traefik.docker.network: cadence_app
+      traefik.http.routers.api.rule: 'PathPrefix("/api/")'
+      traefik.http.routers.api.priority: "20"
+      traefik.http.routers.api.entrypoints: web
+      traefik.http.routers.api.middlewares: default-headers@file
+      traefik.http.services.api.loadbalancer.server.port: "8000"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/health/live', timeout=2)"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+
+  worker:
+    build: {context: ., dockerfile: docker/worker.Dockerfile}
+    restart: unless-stopped
+    environment:
+      <<: *app-environment
+      MUSICGEN_DEVICE: cpu
+      MUSICGEN_WORKER_METRICS_PORT: "9101"
+    expose: ["9101"]
+    volumes:
+      - ./models:/models:ro
+      - midi_outputs:/outputs
+    networks: [app, monitoring]
+    depends_on:
+      redis: {condition: service_healthy}
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:9101/metrics', timeout=2)"]
+      interval: 20s
+      timeout: 5s
+      start_period: 90s
+      retries: 3
+    stop_grace_period: 30s
+
+  redis:
+    image: redis:7.4-alpine
+    restart: unless-stopped
+    user: redis
+    entrypoint: ["/bin/sh", "/usr/local/bin/start-auth.sh"]
+    environment:
+      MUSICGEN_REDIS_PASSWORD: ${MUSICGEN_REDIS_PASSWORD:?Set MUSICGEN_REDIS_PASSWORD in .env}
+    volumes:
+      - ./infra/redis/redis.conf:/usr/local/etc/redis/redis.conf:ro
+      - ./infra/redis/start-auth.sh:/usr/local/bin/start-auth.sh:ro
+      - redis_data:/data
+    networks: [app]
+    healthcheck:
+      test: ["CMD-SHELL", "REDISCLI_AUTH=\"$$MUSICGEN_REDIS_PASSWORD\" redis-cli --user cadence ping | grep -q PONG"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  prometheus:
+    image: prom/prometheus:v3.5.0
+    restart: unless-stopped
+    command:
+      - --config.file=/etc/prometheus/prometheus.yaml
+      - --storage.tsdb.path=/prometheus
+      - --storage.tsdb.retention.time=7d
+      - --web.external-url=/admin/prometheus/
+      - --web.route-prefix=/
+    expose: ["9090"]
+    volumes:
+      - ./infra/prometheus/prometheus.yaml:/etc/prometheus/prometheus.yaml:ro
+      - ./infra/prometheus/rules:/etc/prometheus/rules:ro
+      - prometheus_data:/prometheus
+    networks: [monitoring, admin_tools]
+    labels:
+      traefik.enable: "true"
+      traefik.docker.network: cadence_admin_tools
+      traefik.http.routers.prometheus.rule: 'Path(`/admin/prometheus`) || PathPrefix(`/admin/prometheus/`)'
+      traefik.http.routers.prometheus.priority: "50"
+      traefik.http.routers.prometheus.entrypoints: web
+      traefik.http.routers.prometheus.middlewares: clear-admin-identity@file,admin-auth@file,prometheus-prefix@file,default-headers@file
+      traefik.http.services.prometheus.loadbalancer.server.port: "9090"
+
+  grafana:
+    image: grafana/grafana:12.2.0
+    restart: unless-stopped
+    environment:
+      GF_SECURITY_ADMIN_USER: ${GF_SECURITY_ADMIN_USER:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${GF_SECURITY_ADMIN_PASSWORD:?Set a Grafana password in .env}
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_USERS_AUTO_ASSIGN_ORG_ROLE: Admin
+      GF_SERVER_ROOT_URL: ${MUSICGEN_PUBLIC_ORIGIN:-http://localhost:8080}/admin/grafana/
+      GF_SERVER_SERVE_FROM_SUB_PATH: "true"
+      GF_AUTH_PROXY_ENABLED: "true"
+      GF_AUTH_PROXY_HEADER_NAME: X-WEBAUTH-USER
+      GF_AUTH_PROXY_HEADER_PROPERTY: username
+      GF_AUTH_PROXY_AUTO_SIGN_UP: "true"
+      GF_AUTH_PROXY_WHITELIST: ${MUSICGEN_ADMIN_PROXY_IP:-172.30.250.2}
+      GF_AUTH_PROXY_ENABLE_LOGIN_TOKEN: "false"
+      GF_AUTH_DISABLE_LOGIN_FORM: "true"
+      GF_AUTH_DISABLE_SIGNOUT_MENU: "true"
+      GF_AUTH_BASIC_ENABLED: "false"
+      GF_AUTH_ANONYMOUS_ENABLED: "false"
+    expose: ["3000"]
+    volumes:
+      - ./infra/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./infra/grafana/dashboards:/var/lib/grafana/dashboards:ro
+      - grafana_data:/var/lib/grafana
+    networks: [admin_tools]
+    depends_on: [prometheus]
+    labels:
+      traefik.enable: "true"
+      traefik.docker.network: cadence_admin_tools
+      traefik.http.routers.grafana.rule: 'Path(`/admin/grafana`) || PathPrefix(`/admin/grafana/`)'
+      traefik.http.routers.grafana.priority: "50"
+      traefik.http.routers.grafana.entrypoints: web
+      traefik.http.routers.grafana.middlewares: clear-admin-identity@file,admin-auth@file,default-headers@file
+      traefik.http.services.grafana.loadbalancer.server.port: "3000"
+
+networks:
+  app: {name: cadence_app}
+  monitoring: {name: cadence_monitoring}
+  admin_tools:
+    name: cadence_admin_tools
+    ipam:
+      config:
+        - subnet: ${MUSICGEN_ADMIN_NETWORK_SUBNET:-172.30.250.0/24}
+          ip_range: ${MUSICGEN_ADMIN_NETWORK_RANGE:-172.30.250.128/25}
+
+volumes:
+  midi_outputs:
+  redis_data:
+  prometheus_data:
+  grafana_data:
+  admin_data:

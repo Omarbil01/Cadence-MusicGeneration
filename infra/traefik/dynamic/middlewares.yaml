@@ -1,0 +1,8 @@
+http:
+  middlewares:
+    default-headers:
+      headers:
+        contentTypeNosniff: true
+        referrerPolicy: same-origin
+        customResponseHeaders:
+          X-Frame-Options: DENY

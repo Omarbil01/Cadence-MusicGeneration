@@ -1,0 +1,6 @@
+# Install the project and a CPU PyTorch build first; see README.md.
+jupyterlab>=4,<5
+ipykernel>=6.29,<8
+nbformat>=5.10,<6
+nbclient>=0.10,<1
+matplotlib>=3.9,<4

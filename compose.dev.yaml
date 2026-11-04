@@ -1,0 +1,14 @@
+services:
+  frontend:
+    environment:
+      MUSICGEN_API_BASE_URL: http://localhost:8000
+      PYTHONPATH: /app/src
+    ports: ["127.0.0.1:5000:5000"]
+    volumes: ["./src:/app/src:ro"]
+    command: ["flask", "--app", "musicgen.frontend.app:create_app()", "run", "--host", "0.0.0.0", "--port", "5000", "--no-debugger", "--reload"]
+  api:
+    environment:
+      PYTHONPATH: /app/src
+    ports: ["127.0.0.1:8000:8000"]
+    volumes: ["./src:/app/src:ro"]
+    command: ["uvicorn", "musicgen.api.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]

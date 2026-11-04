@@ -1,0 +1,68 @@
+name: application-checks
+on:
+  push:
+  pull_request:
+permissions:
+  contents: read
+
+jobs:
+  python:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python: ["3.11", "3.12"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - run: python -m pip install -e ".[frontend,api,dev]"
+      - run: ruff check src tests scripts
+      - run: ruff format --check src tests scripts --exclude src/musicgen/generation/runtime
+      - run: pytest -q -m "not checkpoint and not browser and not distributed"
+      - run: python -m build
+
+  inference-and-queue:
+    runs-on: ubuntu-latest
+    services:
+      redis:
+        image: redis:7.4-alpine
+        ports: ["6379:6379"]
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s --health-timeout 3s --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install torch==2.6.0 --index-url https://download.pytorch.org/whl/cpu
+      - run: pip install -e ".[frontend,api,worker,dev]"
+      - run: pytest -q -m "checkpoint"
+        env:
+          MUSICGEN_TEST_REDIS_URL: redis://localhost:6379/15
+
+  browser:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -e ".[frontend,api,dev,ui]"
+      - run: playwright install --with-deps chromium
+      - run: pytest -q -m browser
+        env:
+          MUSICGEN_BROWSER_TESTS: "1"
+
+  containers:
+    runs-on: ubuntu-latest
+    env:
+      MUSICGEN_REDIS_PASSWORD: ci_configuration_only_0123456789abcdef
+    steps:
+      - uses: actions/checkout@v4
+      - run: cp .env.example .env
+      - run: docker compose config --quiet
+      - run: docker compose -f compose.yaml -f compose.gpu.yaml config --quiet
+      - run: docker compose build frontend api worker
+      - run: docker compose run --rm --no-deps --entrypoint promtool prometheus check config /etc/prometheus/prometheus.yaml

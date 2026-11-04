@@ -1,0 +1,85 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "music-generation-app"
+version = "0.2.0"
+description = "Flask frontend, FastAPI API, and PyTorch MIDI generation worker"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "pydantic-settings>=2,<3",
+    "prometheus-client>=0.21,<1",
+]
+
+[project.scripts]
+musicgen-generate = "musicgen.generation.cli:main"
+
+[project.optional-dependencies]
+frontend = [
+    "Flask>=3.1,<4",
+    "gunicorn>=23,<26",
+    "redis>=5,<8",
+]
+api = [
+    "fastapi>=0.115,<1",
+    "uvicorn[standard]>=0.34,<1",
+    "celery[redis]>=5.6,<6",
+    "redis>=5,<8",
+]
+worker = [
+    "torch>=2.6,<3",
+    "numpy>=1.26,<3",
+    "celery[redis]>=5.6,<6",
+    "redis>=5,<8",
+]
+dev = [
+    "pytest>=8,<10",
+    "httpx>=0.27,<1",
+    "ruff>=0.9,<1",
+    "build>=1.2,<2",
+    "fakeredis>=2.27,<3",
+    "PyYAML>=6,<7",
+    "jsonschema>=4,<5",
+]
+ui = ["playwright==1.51.0"]
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+include-package-data = false
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["musicgen*"]
+namespaces = false
+
+[tool.setuptools.package-data]
+"musicgen.frontend" = [
+    "templates/*.html",
+    "static/css/*.css",
+    "static/js/*.js",
+]
+"musicgen.generation.runtime" = ["provenance.json"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+addopts = "-ra"
+markers = [
+    "checkpoint: actual CPU PyTorch inference using an untrained checkpoint fixture",
+    "distributed: requires a dedicated real Redis server and starts a Celery worker",
+    "browser: requires Playwright Chromium for frontend interaction tests",
+    "admin_stack: requires an explicitly configured isolated monitoring stack and test admin",
+]
+
+[tool.ruff]
+target-version = "py311"
+line-length = 100
+src = ["src"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP"]
+
+[tool.ruff.lint.per-file-ignores]
+"src/musicgen/generation/runtime/*.py" = ["ALL"]

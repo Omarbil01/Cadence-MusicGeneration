@@ -1,0 +1,139 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-shell">
+  <header class="topbar">
+    <a class="brand" href="/" aria-label="Cadence home">
+      <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+      <span>cadence<span class="brand-dot">.</span></span>
+    </a>
+    <a class="workspace-label" href="{{ url_for('admin.dashboard') }}">ADMINISTRATION ↗</a>
+    <div class="connection" role="status" aria-live="polite">
+      <span id="connection-dot" class="connection-dot"></span>
+      <span id="connection-label">Connecting</span>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero" aria-labelledby="page-title">
+      <div>
+        <p class="eyebrow"><span></span> A SPACE TO MAKE MUSIC</p>
+        <h1 id="page-title">Your next composition<br>starts <em>here.</em></h1>
+        <p class="hero-copy">Choose a style. Give it a little time.<br>Take a new musical idea into your own hands.</p>
+      </div>
+      <svg class="hero-score" viewBox="0 0 340 160" aria-hidden="true">
+        <g fill="none" stroke="currentColor" stroke-width="1">
+          <path d="M10 40 Q170 0 330 40M10 58 Q170 18 330 58M10 76 Q170 36 330 76M10 94 Q170 54 330 94M10 112 Q170 72 330 112"/>
+        </g>
+        <g fill="#ba593e" stroke="#ba593e" stroke-width="2">
+          <ellipse cx="88" cy="74" rx="9" ry="6" transform="rotate(-20 88 74)"/>
+          <path d="M96 71V27" fill="none"/>
+          <ellipse cx="171" cy="51" rx="9" ry="6" transform="rotate(-20 171 51)"/>
+          <path d="M179 48V8Q199 14 198 34" fill="none"/>
+          <ellipse cx="255" cy="91" rx="9" ry="6" transform="rotate(-20 255 91)"/>
+          <path d="M263 88V42" fill="none"/>
+        </g>
+      </svg>
+    </section>
+
+    <div class="workspace-grid">
+      <section class="composer-card" aria-label="Composition settings">
+        <div class="card-heading">
+          <h2>Make it your own</h2>
+          <span class="subtle-tag">NEW COMPOSITION</span>
+        </div>
+        <form id="generation-form">
+          <fieldset class="genre-fieldset">
+            <legend><span class="step-number">01</span> Choose your style</legend>
+            <div class="genre-options">
+              <label class="genre-option">
+                <input type="radio" name="genre" value="classical" checked>
+                <span class="genre-face">
+                  <span class="genre-top"><span class="genre-symbol" aria-hidden="true">Ⅰ</span><span class="radio-dot"></span></span>
+                  <strong>Classical</strong>
+                  <span class="genre-caption">Shape &amp; balance</span>
+                </span>
+              </label>
+              <label class="genre-option">
+                <input type="radio" name="genre" value="romantic">
+                <span class="genre-face">
+                  <span class="genre-top"><span class="genre-symbol" aria-hidden="true">Ⅱ</span><span class="radio-dot"></span></span>
+                  <strong>Romantic</strong>
+                  <span class="genre-caption">Feeling &amp; expression</span>
+                </span>
+              </label>
+              <label class="genre-option">
+                <input type="radio" name="genre" value="rock_pop">
+                <span class="genre-face">
+                  <span class="genre-top"><span class="genre-symbol" aria-hidden="true">Ⅲ</span><span class="radio-dot"></span></span>
+                  <strong>Rock &amp; Pop</strong>
+                  <span class="genre-caption">Rhythm &amp; energy</span>
+                </span>
+              </label>
+            </div>
+          </fieldset>
+
+          <div class="duration-section">
+            <div class="duration-heading">
+              <label for="duration"><span class="step-number">02</span> Set the length</label>
+              <div class="duration-input-wrap">
+                <input id="duration" name="duration_seconds" type="number" min="5" max="240" step="1" value="45" required aria-label="Duration in seconds">
+                <span>seconds</span>
+              </div>
+            </div>
+            <input id="duration-range" type="range" min="5" max="240" step="1" value="45" aria-label="Adjust duration">
+            <div class="range-labels"><span>0:05</span><span id="max-duration-label">4:00</span></div>
+            <div class="duration-presets" role="group" aria-label="Duration presets">
+              <button type="button" data-duration="30">30 sec</button>
+              <button type="button" data-duration="45" class="selected">45 sec</button>
+              <button type="button" data-duration="60">1 min</button>
+              <button type="button" data-duration="120">2 min</button>
+              <button type="button" data-duration="240">4 min</button>
+            </div>
+          </div>
+
+          <div class="composition-summary">
+            <span id="summary-genre">Classical</span><span class="summary-dot">·</span>
+            <span id="summary-duration">0:45</span><span class="summary-dot">·</span><span>MIDI file</span>
+          </div>
+          <button id="generate-button" class="generate-button" type="submit" disabled>
+            <span id="generate-label">Generate MIDI</span>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14m-5-5 5 5-5 5"/></svg>
+          </button>
+          <p id="availability-message" class="form-note" role="status">Connecting to your music workspace…</p>
+          <noscript><p>Enable JavaScript to request and download a composition.</p></noscript>
+        </form>
+      </section>
+
+      <aside class="output-column">
+        <section id="result-card" class="result-card" aria-labelledby="result-heading">
+          <div class="result-topline"><span>YOUR COMPOSITION</span><span class="file-format">.MID</span></div>
+          <div class="file-illustration" aria-hidden="true">
+            <div class="file-sheet">
+              <span class="file-fold"></span>
+              <div class="sheet-lines"><i></i><i></i><i></i><i></i><i></i></div>
+              <svg viewBox="0 0 70 70"><path d="M28 45V18l27-5v27M28 25l27-5"/><ellipse cx="20" cy="47" rx="8" ry="5"/><ellipse cx="47" cy="42" rx="8" ry="5"/></svg>
+              <span class="sheet-label">MIDI</span>
+            </div>
+            <div class="orbit"></div>
+          </div>
+          <div class="result-copy" aria-live="polite" aria-atomic="true">
+            <p id="result-state" class="result-state">READY WHEN YOU ARE</p>
+            <h2 id="result-heading">An idea, waiting<br>to happen.</h2>
+            <p id="result-message">Your composition will appear here.<br>A few choices are all it takes to begin.</p>
+            <p id="elapsed-time" class="elapsed-time" hidden></p>
+          </div>
+          <a id="download-button" class="download-button" hidden>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m-5-5 5 5 5-5M5 16v4h14v-4"/></svg>
+            Download MIDI
+          </a>
+        </section>
+        <div class="workflow-note">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18V5l10-2v13"/><ellipse cx="6" cy="18" rx="3" ry="2"/><ellipse cx="16" cy="16" rx="3" ry="2"/></svg>
+          <div><strong>A starting point for your sound.</strong><p>Open your MIDI in your favourite music software. Add instruments. Make it yours.</p></div>
+        </div>
+      </aside>
+    </div>
+  </main>
+  <footer class="page-footer"><span>CADENCE STUDIO</span><span>Every composition starts with a little curiosity.</span><a href="{{ url_for('admin.dashboard') }}">Administration</a><span>MIDI / YOUR WORKSPACE</span></footer>
+</div>
+{% endblock %}

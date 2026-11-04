@@ -1,0 +1,10 @@
+{
+  "source": "User music project Experiment 9.0.1 / 9.1 inference package",
+  "original_source_sha256": {
+    "model.py": "ccdf482e8f031f067ae145504f1eadfa3d143169f577729198dc857a2e84712d",
+    "grammar.py": "c4f6998ea3db50e46e032e68f90da762656ac34c60cad802f3daf4c5d0b5cc66",
+    "midi.py": "0da005ec0a738031e5f5ac77e14a63073476919f0b5cd8b65317f1961016a595",
+    "context.py": "0d8e4af0c2f4c26145a66abcb3500825eab34bb98e912bb908caac009d3217c5"
+  },
+  "changes": "Original source hashes are retained for provenance. Local changes include configurable model dimensions, optional progress conditioning and relative distance bias, and aligned feature/context framing. The event vocabulary and MIDI reader retain the original format; ending and repetition policies live in the generation wrapper."
+}

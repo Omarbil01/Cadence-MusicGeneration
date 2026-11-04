@@ -1,0 +1,26 @@
+{% extends "admin_base.html" %}
+{% block title %}Redis status{% endblock %}
+{% block content %}
+<section class="page-heading">
+  <p class="eyebrow">JOB STORE</p>
+  <h1>Redis<br><em>service overview.</em></h1>
+  <p class="intro">A read-only view of the service that coordinates background generation.</p>
+</section>
+{% if status.local_mode %}
+<p class="notice">Local mode keeps jobs in memory inside the API. Redis is used by the Docker worker setup.</p>
+{% elif not status.available %}
+<p class="notice error" role="status">Redis is currently unavailable. Check that the Compose services are running and try again.</p>
+{% else %}
+<dl class="status-grid">
+  <div><dt>Connection</dt><dd class="healthy">Available</dd></div>
+  <div><dt>Redis version</dt><dd>{{ status.version }}</dd></div>
+  <div><dt>Queued jobs</dt><dd>{{ status.queued }}</dd></div>
+  <div><dt>Generating jobs</dt><dd>{{ status.generating }}</dd></div>
+  <div><dt>Memory in use</dt><dd>{{ status.memory }}</dd></div>
+  <div><dt>Connected clients</dt><dd>{{ status.connected_clients }}</dd></div>
+  <div><dt>Uptime</dt><dd>{{ status.uptime_seconds }} seconds</dd></div>
+  <div><dt>Keys in job database</dt><dd>{{ status.database_keys }}</dd></div>
+</dl>
+{% endif %}
+<a class="secondary-link" href="{{ url_for('admin.redis_status') }}">Refresh status →</a>
+{% endblock %}

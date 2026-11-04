@@ -1,0 +1,80 @@
+{
+  "schema_version": 1,
+  "description": "One first-trial frontend sample per genre from the final epoch-500 evaluation.",
+  "checkpoint": {
+    "epoch": 500,
+    "sha256": "6ad542c47566bcf09f34d5c170a65394e8b31d30200eb98a9fce63ad143590f0",
+    "model_config": {
+      "context": 256,
+      "d_model": 128,
+      "layers": 3,
+      "heads": 4,
+      "dropout": 0.15,
+      "progress_bins": 16,
+      "relative_attention": true
+    }
+  },
+  "sampling": {
+    "temperature": 0.85,
+    "top_k": 24,
+    "context_mode": "framed",
+    "palette": "original",
+    "ending_style": "release",
+    "repetition_penalty": 0.3,
+    "inference_policy_version": "cadence-release-events-v1"
+  },
+  "timing_note": "generation_seconds records the original CPU evaluation observation; it is not a portable latency guarantee.",
+  "samples": [
+    {
+      "file": "classical_60s.mid",
+      "genre": "classical",
+      "seed": 1669031860,
+      "requested_duration_seconds": 60,
+      "actual_duration_seconds": 60.0,
+      "bpm": 112,
+      "meter": [
+        3,
+        4
+      ],
+      "notes": 435,
+      "tokens": 2216,
+      "generation_seconds": 11.99,
+      "encoded_duration_seconds": 59.999968,
+      "midi_sha256": "28d5d7fd6889bf88e69cef30a9fab47c6e5bff8eeb5f60ed25e1d0f88017589d"
+    },
+    {
+      "file": "romantic_60s.mid",
+      "genre": "romantic",
+      "seed": 2034763948,
+      "requested_duration_seconds": 60,
+      "actual_duration_seconds": 60.0,
+      "bpm": 96,
+      "meter": [
+        4,
+        4
+      ],
+      "notes": 222,
+      "tokens": 1148,
+      "generation_seconds": 5.595,
+      "encoded_duration_seconds": 60.0,
+      "midi_sha256": "d7a12133fd0e3b5b3d5caa9c27cc09e21e18dc3dbed9b372fea3ead5542a9e9b"
+    },
+    {
+      "file": "rock_pop_60s.mid",
+      "genre": "rock_pop",
+      "seed": 1612425260,
+      "requested_duration_seconds": 60,
+      "actual_duration_seconds": 60.0,
+      "bpm": 120,
+      "meter": [
+        4,
+        4
+      ],
+      "notes": 605,
+      "tokens": 3154,
+      "generation_seconds": 18.18,
+      "encoded_duration_seconds": 60.0,
+      "midi_sha256": "1286dcc51417ab13f419637569cf9b06963ebb49e2ff8f358dd1824428082dbf"
+    }
+  ]
+}

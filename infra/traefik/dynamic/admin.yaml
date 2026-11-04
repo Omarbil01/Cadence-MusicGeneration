@@ -1,0 +1,18 @@
+http:
+  middlewares:
+    clear-admin-identity:
+      headers:
+        customRequestHeaders:
+          X-WEBAUTH-USER: ""
+          X-WEBAUTH-ROLE: ""
+          Authorization: ""
+    admin-auth:
+      forwardAuth:
+        address: http://frontend:5000/admin/auth
+        trustForwardHeader: false
+        preserveLocationHeader: true
+        authRequestHeaders: [Cookie]
+        authResponseHeaders: [X-WEBAUTH-USER]
+    prometheus-prefix:
+      stripPrefix:
+        prefixes: [/admin/prometheus]

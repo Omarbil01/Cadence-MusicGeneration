@@ -1,0 +1,20 @@
+entryPoints:
+  web:
+    address: ":80"
+  metrics:
+    address: ":9100"
+providers:
+  docker:
+    exposedByDefault: false
+    network: cadence_app
+  file:
+    directory: /etc/traefik/dynamic
+    watch: true
+metrics:
+  prometheus:
+    entryPoint: metrics
+    addRoutersLabels: true
+    addServicesLabels: true
+accessLog: {}
+log:
+  level: INFO

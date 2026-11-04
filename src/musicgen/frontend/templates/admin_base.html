@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#f6f4ef">
+    <title>{% block title %}Administration{% endblock %} — Cadence</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
+  </head>
+  <body>
+    <div class="admin-shell">
+      <header class="admin-header">
+        <a class="brand" href="{{ url_for('index') }}">cadence<span>.</span></a>
+        <nav aria-label="Administrator navigation">
+          {% if user %}<a href="{{ url_for('admin.dashboard') }}">Overview</a>{% endif %}
+          <a href="{{ url_for('index') }}">Music studio</a>
+          {% if user %}
+          <form method="post" action="{{ url_for('admin.logout') }}">
+            <input type="hidden" name="csrf_token" value="{{ logout_csrf }}">
+            <button class="text-button" type="submit">Sign out</button>
+          </form>
+          {% endif %}
+        </nav>
+      </header>
+      <main>{% block content %}{% endblock %}</main>
+      <footer>CADENCE ADMINISTRATION{% if user %}<span>Signed in as {{ user.username }}</span>{% endif %}</footer>
+    </div>
+  </body>
+</html>

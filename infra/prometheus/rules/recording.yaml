@@ -1,0 +1,7 @@
+groups:
+  - name: cadence_http
+    rules:
+      - record: musicgen:http_request_rate:5m
+        expr: sum by (service) (rate(musicgen_http_requests_total[5m]))
+      - record: musicgen:http_error_rate:5m
+        expr: sum by (service) (rate(musicgen_http_requests_total{status=~"5.."}[5m]))

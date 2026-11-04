@@ -1,0 +1,16 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#f6f4ef">
+    <meta name="description" content="Create a MIDI composition in the style and length you choose.">
+    <title>{% block title %}Cadence — MIDI Studio{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <script id="app-config" type="application/json">{{ app_config | tojson }}</script>
+    <script src="{{ url_for('static', filename='js/app.js') }}" defer></script>
+  </head>
+  <body>
+    {% block content %}{% endblock %}
+  </body>
+</html>
