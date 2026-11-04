@@ -51,6 +51,17 @@ def test_music_studio_remains_available_without_admin_setup(settings, tmp_path):
     assert client.get("/health/live").status_code == 200
 
 
+def test_docker_setup_instructions_target_the_running_frontend_database(settings):
+    settings.run_mode = "distributed"
+    client = create_app(settings).test_client()
+    response = client.get("/admin/login")
+    assert response.status_code == 503
+    assert (
+        b"docker compose exec frontend python scripts/manage_admin.py create admin" in response.data
+    )
+    assert b".venv/bin/python" not in response.data
+
+
 @pytest.mark.parametrize(
     "path",
     ["/admin/", "/admin/redis", "/admin/prometheus/", "/admin/grafana/api/user"],

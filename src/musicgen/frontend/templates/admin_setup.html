@@ -9,8 +9,8 @@
   {% else %}
   <h1>Set up your<br><em>administrator.</em></h1>
   <p class="intro">Create an administrator account from the project terminal to enable sign in.</p>
-  <pre><code>.venv/bin/python scripts/manage_admin.py create admin</code></pre>
-  <p class="helper">The command prompts for your password. For Docker, follow the administrator setup instructions in the operations guide.</p>
+  <pre><code>{{ setup_command }}</code></pre>
+  <p class="helper">Run this command from the project folder. It prompts for your password and creates the account in the database used by this deployment.</p>
   {% endif %}
   <a class="secondary-link" href="{{ url_for('index') }}">Return to the music studio →</a>
 </section>

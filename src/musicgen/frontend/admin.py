@@ -91,6 +91,11 @@ def create_admin_blueprint(settings, store=None):
             name,
             user=getattr(g, "admin_user", None),
             logout_csrf=csrf_value(token, "logout") if token else "",
+            setup_command=(
+                "docker compose exec frontend python scripts/manage_admin.py create admin"
+                if settings.run_mode == "distributed"
+                else ".venv/bin/python scripts/manage_admin.py create admin"
+            ),
             **context,
         )
 
