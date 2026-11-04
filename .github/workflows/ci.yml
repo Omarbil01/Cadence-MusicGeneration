@@ -43,7 +43,8 @@ jobs:
           MUSICGEN_TEST_REDIS_URL: redis://localhost:6379/15
 
   browser:
-    runs-on: ubuntu-latest
+    # Match the supported Linux dependencies of the pinned Playwright 1.51 runtime.
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
