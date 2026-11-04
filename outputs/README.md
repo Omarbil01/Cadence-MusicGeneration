@@ -1,14 +1,14 @@
 # One-minute MIDI examples
 
-These are generated samples from the final **epoch-500** balanced CPU checkpoint:
+These are generated samples from the balanced CPU checkpoint:
 one 60-second composition for each supported genre. Each is the first frontend
 trial for its genre from the recorded evaluation, retained without editing.
 
-| Sample | Genre | Seed | Notes |
+| Sample | Genre | 
 |---|---|---:|---:|
-| [classical_60s.mid](classical_60s.mid) | Classical | 1669031860 | 435 |
-| [romantic_60s.mid](romantic_60s.mid) | Romantic | 2034763948 | 222 |
-| [rock_pop_60s.mid](rock_pop_60s.mid) | Rock & Pop | 1612425260 | 605 |
+| [classical_60s.mid](classical_60s.mid) | Classical | 
+| [romantic_60s.mid](romantic_60s.mid) | Romantic | 
+| [rock_pop_60s.mid](rock_pop_60s.mid) | Rock & Pop | 
 
 Open the files in a DAW or MIDI player with a synthesizer/soundfont to hear them.
 MIDI stores notes and performance instructions; audio previews are not included.
